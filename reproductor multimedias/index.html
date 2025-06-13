@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Multimedia Híbrido</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; color: #333; }
+        .main-container { width: 100%; max-width: 800px; background-color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; margin-top: 0; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        #media-url { flex-grow: 1; padding: 12px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; }
+        .button { padding: 12px 20px; background-color: #1877f2; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
+        .file-label { background-color: #42b72a; }
+        #file-input { display: none; }
+        .player-container { position: relative; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; background-color: #000; display: none; margin-top: 20px; }
+        .media-view { position: relative; width: 100%; background-color: #000; }
+        video { width: 100%; display: block; }
+        #audio-visualizer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; }
+        .controls { position: relative; z-index: 2; display: flex; align-items: center; padding: 10px; background-color: rgba(0,0,0,0.7); width: 100%; box-sizing: border-box; color: white; }
+        .controls button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 5px 10px; }
+        .progress-bar { flex-grow: 1; -webkit-appearance: none; width: 100%; height: 8px; background: #444; outline: none; border-radius: 5px; cursor: pointer; margin: 0 10px; }
+        .progress-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #1e90ff; border-radius: 50%; cursor: pointer; }
+        .volume-container { display: flex; align-items: center; }
+        .volume-slider { -webkit-appearance: none; width: 80px; height: 5px; background: #444; outline: none; margin-left: 5px; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
+        .time-display { font-size: 14px; margin: 0 15px; min-width: 90px; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>Reproductor Multimedia Híbrido</h1>
+        <div class="input-group">
+            <input type="text" id="media-url" placeholder="Pega una URL (.mp4, .mp3, .m3u8)...">
+            <button id="load-url-btn" class="button">Cargar URL</button>
+        </div>
+        <div class="input-group">
+            <label for="file-input" class="button file-label">Seleccionar Archivo Local</label>
+            <input type="file" id="file-input" accept="video/*,audio/*,.m3u,.m3u8">
+            <span id="file-name" style="margin-left: 10px; color: #606770;">Ningún archivo seleccionado</span>
+        </div>
+        <div class="player-container" id="player-wrapper">
+            <div class="media-view">
+                <video id="video-player" crossorigin="anonymous"></video>
+                <canvas id="audio-visualizer"></canvas>
+            </div>
+            <div class="controls">
+                <button id="play-pause-btn"><i class="fas fa-play"></i></button>
+                <div class="time-display" id="time-display">00:00 / 00:00</div>
+                <input type="range" id="progress-bar" class="progress-bar" min="0" max="100" value="0">
+                <div class="volume-container">
+                    <button id="mute-btn"><i class="fas fa-volume-high"></i></button>
+                    <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.1" value="1">
+                </div>
+                <button id="fullscreen-btn"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video-player');
+            const urlInput = document.getElementById('media-url');
+            const loadUrlBtn = document.getElementById('load-url-btn');
+            const fileInput = document.getElementById('file-input');
+            const fileNameSpan = document.getElementById('file-name');
+            const playerWrapper = document.getElementById('player-wrapper');
+            const canvas = document.getElementById('audio-visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            
+            let hls = null;
+            let audioContext, analyser, source, dataArray;
+            let animationFrameId;
+
+            function setupAudioVisualizer() {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    source = audioContext.createMediaElementSource(video);
+                    source.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                }
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                renderFrame();
+            }
+
+            function renderFrame() {
+                animationFrameId = requestAnimationFrame(renderFrame);
+                analyser.getByteFrequencyData(dataArray);
+                canvasCtx.fillStyle = '#000';
+                canvas.width = playerWrapper.clientWidth;
+                canvas.height = playerWrapper.clientHeight;
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                const barWidth = (canvas.width / dataArray.length) * 2.5;
+                let x = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    const barHeight = dataArray[i];
+                    const r = barHeight + (25 * (i/dataArray.length));
+                    const g = 250 * (i/dataArray.length);
+                    const b = 50;
+                    canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+            
+            function stopVisualizer() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                canvas.style.display = 'none';
+                video.style.opacity = 1;
+            }
+            
+            function loadMediaSource(source, sourceType) {
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+                stopVisualizer();
+                playerWrapper.style.display = 'block';
+
+                if (sourceType === 'audio') {
+                    video.style.opacity = 0;
+                    canvas.style.display = 'block';
+                    setupAudioVisualizer();
+                } else {
+                    video.style.opacity = 1;
+                    canvas.style.display = 'none';
+                }
+
+                if (sourceType === 'hls' && Hls.isSupported()) {
+                    hls = new Hls();
+                    hls.loadSource(source);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                } else {
+                    video.src = source;
+                    video.play();
+                }
+            }
+
+            function loadFromUrl() {
+                const mediaUrl = urlInput.value.trim();
+                if (!mediaUrl) return;
+                let sourceType = 'video';
+                if (mediaUrl.endsWith('.mp3') || mediaUrl.endsWith('.wav') || mediaUrl.endsWith('.ogg')) sourceType = 'audio';
+                else if (mediaUrl.includes('.m3u8')) sourceType = 'hls';
+                loadMediaSource(mediaUrl, sourceType);
+            }
+
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                fileNameSpan.textContent = file.name;
+                const fileUrl = URL.createObjectURL(file);
+                
+                let sourceType = 'video';
+                if (file.type.startsWith('audio/')) sourceType = 'audio';
+                else if (file.name.endsWith('.m3u8') || file.name.endsWith('.m3u')) sourceType = 'hls';
+                
+                loadMediaSource(fileUrl, sourceType);
+            });
+            
+            loadUrlBtn.addEventListener('click', loadFromUrl);
+            urlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loadFromUrl();
+            });
+
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const playPauseIcon = playPauseBtn.querySelector('i');
+            const progressBar = document.getElementById('progress-bar');
+            const timeDisplay = document.getElementById('time-display');
+            const muteBtn = document.getElementById('mute-btn');
+            const muteIcon = muteBtn.querySelector('i');
+            const volumeSlider = document.getElementById('volume-slider');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+            function formatTime(seconds) {
+                if (isNaN(seconds) || seconds === Infinity) return '00:00 / ∞';
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            function togglePlayPause() { if (video.paused) video.play(); else video.pause(); }
+            function updatePlayIcon() { playPauseIcon.className = `fas fa-${video.paused ? 'play' : 'pause'}`; }
+            
+            function updateProgress() {
+                if (video.duration) {
+                    progressBar.value = (video.currentTime / video.duration) * 100;
+                    timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+                }
+            }
+            
+            function setVideoProgress() { video.currentTime = (progressBar.value / 100) * video.duration; }
+            function toggleMute() { video.muted = !video.muted; volumeSlider.value = video.muted ? 0 : video.volume; }
+            function updateMuteIcon() {
+                if (video.muted || video.volume === 0) muteIcon.className = 'fas fa-volume-xmark';
+                else if (video.volume < 0.5) muteIcon.className = 'fas fa-volume-low';
+                else muteIcon.className = 'fas fa-volume-high';
+            }
+            function handleVolumeChange() { video.volume = volumeSlider.value; video.muted = volumeSlider.value == 0; }
+            function toggleFullscreen() { if (!document.fullscreenElement) playerWrapper.requestFullscreen(); else document.exitFullscreen(); }
+
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            video.addEventListener('click', togglePlayPause);
+            video.addEventListener('play', updatePlayIcon);
+            video.addEventListener('pause', updatePlayIcon);
+            video.addEventListener('timeupdate', updateProgress);
+            video.addEventListener('volumechange', updateMuteIcon);
+            progressBar.addEventListener('input', setVideoProgress);
+            muteBtn.addEventListener('click', toggleMute);
+            volumeSlider.addEventListener('input', handleVolumeChange);
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+        });
+    </script>
+</body>
+</html>
