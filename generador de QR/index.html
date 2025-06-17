@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Códigos QR Avanzado (Mejorado)</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 20px 0; color: #333; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); width: 100%; max-width: 500px; box-sizing: border-box; }
+        h1 { margin-top: 0; color: #1c1e21; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #606770; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #dddfe2; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1877f2; box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); }
+        button#generate-btn { width: 100%; padding: 12px; background-color: #1877f2; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease; margin-top: 10px; }
+        button#generate-btn:hover { background-color: #166fe5; }
+        .qr-form { display: none; }
+        .qr-form.active { display: block; }
+        #qrcode-container { margin-top: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 256px; background-color: #f7f7f7; border-radius: 8px; border: 1px dashed #ccc; padding: 20px; text-align: center; }
+        #qrcode-placeholder { color: #aaa; }
+        #download-link { display: none; margin-top: 20px; background-color: #42b72a; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: background-color 0.3s ease; }
+        #download-link:hover { background-color: #36a420; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Generador de QR Avanzado</h1>
+
+        <div class="form-group">
+            <label for="qr-type">Tipo de Código QR:</label>
+            <select id="qr-type">
+                <option value="url" selected>URL / Enlace</option>
+                <option value="text">Texto Simple</option>
+                <option value="wifi">Red Wi-Fi</option>
+                <option value="vcard">Tarjeta de Contacto (vCard)</option>
+                <option value="sms">Mensaje SMS</option>
+                <option value="phone">Llamada Telefónica</option>
+                <option value="email">Correo Electrónico</option>
+                <option value="geo">Ubicación Geográfica</option>
+                <option value="event">Evento de Calendario</option>
+            </select>
+        </div>
+        
+        <div id="forms-container">
+            <!-- URL -->
+            <div id="form-url" class="qr-form active">
+                <div class="form-group">
+                    <label for="url-input">URL (ej: https://www.google.com)</label>
+                    <input type="url" id="url-input" placeholder="https://ejemplo.com" required>
+                </div>
+            </div>
+            <!-- Texto -->
+            <div id="form-text" class="qr-form">
+                <div class="form-group">
+                    <label for="text-input">Texto</label>
+                    <textarea id="text-input" rows="4" placeholder="Escribe tu texto aquí..." required></textarea>
+                </div>
+            </div>
+            <!-- Wi-Fi -->
+            <div id="form-wifi" class="qr-form">
+                <div class="form-group">
+                    <label for="wifi-ssid">Nombre de la Red (SSID)</label>
+                    <input type="text" id="wifi-ssid" placeholder="MiCasa_WiFi" required>
+                </div>
+                <div class="form-group">
+                    <label for="wifi-pass">Contraseña</label>
+                    <input type="password" id="wifi-pass" placeholder="ContraseñaSecreta123">
+                </div>
+                <div class="form-group">
+                    <label for="wifi-encryption">Tipo de Cifrado</label>
+                    <select id="wifi-encryption">
+                        <option value="WPA" selected>WPA/WPA2</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">Sin Contraseña</option>
+                    </select>
+                </div>
+            </div>
+            <!-- vCard -->
+            <div id="form-vcard" class="qr-form">
+                <div class="grid">
+                    <div class="form-group"><label for="vcard-fn">Nombre</label><input type="text" id="vcard-fn" placeholder="Juan" required></div>
+                    <div class="form-group"><label for="vcard-ln">Apellido</label><input type="text" id="vcard-ln" placeholder="Pérez"></div>
+                </div>
+                <div class="form-group"><label for="vcard-tel">Teléfono</label><input type="tel" id="vcard-tel" placeholder="+34 600 000 000" required></div>
+                <div class="form-group"><label for="vcard-email">Email</label><input type="email" id="vcard-email" placeholder="juan.perez@email.com"></div>
+                <div class="form-group"><label for="vcard-org">Organización</label><input type="text" id="vcard-org" placeholder="Empresa S.L."></div>
+                <div class="form-group"><label for="vcard-url">Sitio Web</label><input type="url" id="vcard-url" placeholder="https://empresa.com"></div>
+            </div>
+            <!-- SMS -->
+            <div id="form-sms" class="qr-form">
+                 <div class="form-group"><label for="sms-tel">Número de Teléfono</label><input type="tel" id="sms-tel" placeholder="+34 600 000 000" required></div>
+                 <div class="form-group"><label for="sms-msg">Mensaje</label><textarea id="sms-msg" rows="3" placeholder="Hola, ¿qué tal?"></textarea></div>
+            </div>
+            <!-- Teléfono -->
+            <div id="form-phone" class="qr-form">
+                <div class="form-group"><label for="phone-tel">Número de Teléfono</label><input type="tel" id="phone-tel" placeholder="+34 600 000 000" required></div>
+            </div>
+            <!-- Email -->
+            <div id="form-email" class="qr-form">
+                <div class="form-group"><label for="email-to">Para (Email)</label><input type="email" id="email-to" placeholder="destinatario@email.com" required></div>
+                <div class="form-group"><label for="email-sub">Asunto</label><input type="text" id="email-sub" placeholder="Asunto del correo"></div>
+                <div class="form-group"><label for="email-body">Cuerpo del Mensaje</label><textarea id="email-body" rows="3"></textarea></div>
+            </div>
+             <!-- Geo -->
+             <div id="form-geo" class="qr-form">
+                <div class="grid">
+                    <div class="form-group"><label for="geo-lat">Latitud</label><input type="text" id="geo-lat" placeholder="40.416775" required></div>
+                    <div class="form-group"><label for="geo-lon">Longitud</label><input type="text" id="geo-lon" placeholder="-3.703790" required></div>
+                </div>
+             </div>
+             <!-- Evento -->
+             <div id="form-event" class="qr-form">
+                <div class="form-group"><label for="event-summary">Título del Evento</label><input type="text" id="event-summary" placeholder="Reunión de equipo" required></div>
+                <div class="form-group"><label for="event-loc">Ubicación</label><input type="text" id="event-loc" placeholder="Sala de Juntas"></div>
+                <div class="grid">
+                    <div class="form-group"><label for="event-start">Inicio (Fecha y Hora)</label><input type="datetime-local" id="event-start" required></div>
+                    <div class="form-group"><label for="event-end">Fin (Fecha y Hora)</label><input type="datetime-local" id="event-end" required></div>
+                </div>
+             </div>
+        </div>
+
+        <button id="generate-btn">Generar QR</button>
+
+        <div id="qrcode-container">
+            <p id="qrcode-placeholder">El código QR aparecerá aquí</p>
+        </div>
+        
+        <a id="download-link" download="codigo-qr.png">Descargar QR</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const qrTypeSelector = document.getElementById('qr-type');
+            const generateBtn = document.getElementById('generate-btn');
+            const qrContainer = document.getElementById('qrcode-container');
+            const downloadLink = document.getElementById('download-link');
+            const qrPlaceholder = document.getElementById('qrcode-placeholder');
+
+            // Función para limpiar el QR y el enlace de descarga
+            const resetQR = () => {
+                qrContainer.innerHTML = '';
+                qrContainer.appendChild(qrPlaceholder);
+                downloadLink.style.display = 'none';
+            };
+
+            // Cambiar formulario y limpiar el QR anterior
+            qrTypeSelector.addEventListener('change', () => {
+                document.querySelectorAll('.qr-form').forEach(form => form.classList.remove('active'));
+                const selectedFormId = 'form-' + qrTypeSelector.value;
+                document.getElementById(selectedFormId).classList.add('active');
+                resetQR();
+            });
+
+            // Función para generar el QR
+            generateBtn.addEventListener('click', () => {
+                const type = qrTypeSelector.value;
+                let qrText = '';
+                let filename = 'qr-code.png';
+                let isValid = true;
+
+                // Construir el texto del QR y validar campos
+                switch (type) {
+                    case 'url':
+                        const urlInput = document.getElementById('url-input').value;
+                        if (!urlInput) { isValid = false; alert('La URL no puede estar vacía.'); }
+                        else {
+                           qrText = urlInput;
+                           try { let domain = new URL(urlInput).hostname; filename = `qr-url-${domain.replace('www.','')}.png`; } catch(e) { filename = 'qr-url.png'; }
+                        }
+                        break;
+                    case 'text':
+                        const textInput = document.getElementById('text-input').value;
+                        if (!textInput) { isValid = false; alert('El texto no puede estar vacío.'); }
+                        else { qrText = textInput; filename = 'qr-texto.png'; }
+                        break;
+                    case 'wifi':
+                        const ssid = document.getElementById('wifi-ssid').value;
+                        if (!ssid) { isValid = false; alert('El Nombre de la Red (SSID) no puede estar vacío.'); }
+                        else {
+                            const pass = document.getElementById('wifi-pass').value;
+                            const enc = document.getElementById('wifi-encryption').value;
+                            qrText = `WIFI:T:${enc};S:${ssid};P:${pass};;`;
+                            filename = `qr-wifi-${ssid}.png`;
+                        }
+                        break;
+                    case 'vcard':
+                        const fn = document.getElementById('vcard-fn').value;
+                        const tel = document.getElementById('vcard-tel').value;
+                        if (!fn || !tel) { isValid = false; alert('El Nombre y el Teléfono son obligatorios para la vCard.'); }
+                        else {
+                            const ln = document.getElementById('vcard-ln').value;
+                            const email = document.getElementById('vcard-email').value;
+                            const org = document.getElementById('vcard-org').value;
+                            const vcardUrl = document.getElementById('vcard-url').value;
+                            qrText = `BEGIN:VCARD\nVERSION:3.0\nN:${ln};${fn}\nFN:${fn} ${ln}\nTEL;TYPE=CELL:${tel}\nEMAIL:${email}\nORG:${org}\nURL:${vcardUrl}\nEND:VCARD`;
+                            filename = `qr-contacto-${fn.toLowerCase()}.png`;
+                        }
+                        break;
+                    case 'sms':
+                        const smsTel = document.getElementById('sms-tel').value;
+                        if (!smsTel) { isValid = false; alert('El número de teléfono es obligatorio para SMS.'); }
+                        else {
+                            const smsMsg = document.getElementById('sms-msg').value;
+                            qrText = `SMSTO:${smsTel}:${smsMsg}`;
+                            filename = `qr-sms-${smsTel}.png`;
+                        }
+                        break;
+                    case 'phone':
+                        const phoneTel = document.getElementById('phone-tel').value;
+                        if (!phoneTel) { isValid = false; alert('El número de teléfono es obligatorio.'); }
+                        else { qrText = `tel:${phoneTel}`; filename = `qr-telefono-${phoneTel}.png`; }
+                        break;
+                    case 'email':
+                        const to = document.getElementById('email-to').value;
+                        if (!to) { isValid = false; alert('El email del destinatario es obligatorio.'); }
+                        else {
+                            const sub = encodeURIComponent(document.getElementById('email-sub').value);
+                            const body = encodeURIComponent(document.getElementById('email-body').value);
+                            qrText = `mailto:${to}?subject=${sub}&body=${body}`;
+                            filename = `qr-email-${to}.png`;
+                        }
+                        break;
+                     case 'geo':
+                        const lat = document.getElementById('geo-lat').value;
+                        const lon = document.getElementById('geo-lon').value;
+                        if (!lat || !lon) { isValid = false; alert('La latitud y la longitud son obligatorias.'); }
+                        else { qrText = `geo:${lat},${lon}`; filename = 'qr-ubicacion.png'; }
+                        break;
+                     case 'event':
+                        const summary = document.getElementById('event-summary').value;
+                        const start = document.getElementById('event-start').value;
+                        const end = document.getElementById('event-end').value;
+                        if (!summary || !start || !end) { isValid = false; alert('El título y las fechas de inicio/fin son obligatorios.'); }
+                        else {
+                            const loc = document.getElementById('event-loc').value;
+                            const formatDT = (dt) => dt.replace(/[-:T]/g, '') + '00';
+                            qrText = `BEGIN:VEVENT\nSUMMARY:${summary}\nLOCATION:${loc}\nDTSTART:${formatDT(start)}\nDTEND:${formatDT(end)}\nEND:VEVENT`;
+                            filename = `qr-evento-${summary.replace(/\s+/g, '_').toLowerCase()}.png`;
+                        }
+                        break;
+                }
+
+                if (!isValid) return; // Detener si la validación falló
+
+                // Generar la imagen del QR
+                qrContainer.innerHTML = '';
+                downloadLink.style.display = 'none';
+                
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                setTimeout(() => {
+                    const canvas = qrContainer.querySelector('canvas');
+                    const img = qrContainer.querySelector('img'); // qrcode.js a veces genera img en lugar de canvas
+                    const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+                    
+                    if (dataUrl) {
+                        downloadLink.href = dataUrl;
+                        downloadLink.setAttribute('download', filename);
+                        downloadLink.style.display = 'inline-block';
+                    }
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

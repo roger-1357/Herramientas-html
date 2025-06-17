@@ -1,0 +1,56 @@
+:root { --main-bg: #111; --panel-bg: #1a1a1a; --grid-bg: #2c3e50; --text-color: #fff; --primary-color: #3498db; --active-color: #e67e22; }
+body { background-color: var(--main-bg); color: var(--text-color); font-family: 'Segoe UI', sans-serif; padding: 10px; box-sizing: border-box; }
+.main-container { width: 100%; max-width: 1600px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 10px; font-size: 1.3em; }
+.controls-container { display: flex; justify-content: center; align-items: center; background-color: var(--panel-bg); padding: 8px; border-radius: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 15px; }
+.control-group, .button-group { display: flex; align-items: center; gap: 6px; }
+.control-group label { font-weight: bold; font-size: 0.75em; }
+#skin-selector, #tempo-input, #steps-input { background-color: #333; color: var(--text-color); border: 1px solid #555; padding: 3px; border-radius: 4px; font-size: 0.75em; }
+#tempo-input, #steps-input { width: 50px; }
+.button-group button { font-size: 0.9em; padding: 4px 8px; border-radius: 5px; cursor: pointer; background-color: #f0f0f0; color: #333; border: 1px solid #ccc; }
+.button-group button.active { background-color: #c0392b; color: white; }
+#swing-slider { width: 70px; } #swing-display { font-size: 0.75em; width: 35px; }
+.master-controls { gap: 20px; }
+.master-label h2 { font-size: 1em; margin: 0; }
+.master-eq { display: flex; gap: 10px; }
+.knob-control { text-align: center; }
+.knob-control label { font-size: 0.6em; font-weight: bold; text-transform: uppercase; display: block; margin-top: 4px; }
+.master-volume-container { display: flex; align-items: center; gap: 5px; }
+.master-volume-container label { font-size: 0.7em; font-weight: bold; }
+#master-volume { width: 120px; }
+.instrument-grid { display: flex; flex-direction: column; background-color: var(--grid-bg); padding: 10px; border-radius: 10px; overflow-x: auto; gap: 5px; }
+.track { background-color: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px; position: relative; }
+.track-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.track-body { display: grid; grid-template-columns: 140px 45px 1fr; gap: 10px; align-items: center; }
+.track-title { font-weight: bold; font-size: 0.9em; }
+.load-button { font-size: 1em; color: var(--primary-color); cursor: pointer; }
+.load-button.loaded { color: #2ecc71; }
+.file-input { display: none; }
+.file-name-display { font-style: italic; color: #bdc3c7; font-size: 0.7em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.remove-track-btn { position: absolute; top: 5px; right: 5px; width: 18px; height: 18px; line-height: 16px; text-align: center; background-color: #c0392b; color: white; border: none; border-radius: 50%; cursor: pointer; opacity: 0; transition: opacity 0.2s; font-weight: bold; }
+.track:hover .remove-track-btn { opacity: 1; }
+.track-controls { display: flex; align-items: center; justify-content: space-around; }
+.control-stack { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.track-mix-controls { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.mute-btn, .solo-btn { width: 22px; height: 22px; font-weight: bold; font-size: 0.7em; border-radius: 4px; border: 1px solid #7f8c8d; background-color: #5d6d7e; color: #fff; cursor: pointer; }
+.mute-btn.active { background-color: #f1c40f; color: #000; }
+.solo-btn.active { background-color: #2ecc71; color: #000; }
+.track.muted .track-title { opacity: 0.5; }
+input[type=range].vertical { -webkit-appearance: none; appearance: none; width: 40px; height: 6px; background: #5d6d7e; transform: rotate(-90deg); cursor: pointer; margin: 15px 0; }
+input[type=range].vertical::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; background: var(--primary-color); border-radius: 50%; }
+.steps { display: grid; gap: 2px; }
+.step { width: 16px; height: 16px; background-color: #7f8c8d; border-radius: 3px; cursor: pointer; }
+.step.active { background-color: var(--active-color); }
+.step.current { box-shadow: 0 0 8px var(--primary-color); border: 1px solid var(--primary-color); }
+.add-track-container { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
+#add-sampler-track-btn, #add-mic-track-btn { padding: 8px 15px; font-size: 0.9em; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; }
+#add-mic-track-btn { background-color: #8e44ad; }
+.mic-record-btn { padding: 5px 10px; background-color: #e74c3c; color: white; border:none; border-radius: 4px; cursor: pointer; }
+.mic-record-btn.recording { animation: pulse 1s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+.mic-status { font-size: 0.8em; color: #f1c40f; }
+body.classic { --grid-bg: #d1c7b8; --text-color: #333; --panel-bg: #333; --primary-color: #333; --active-color: #ff9900; }
+body.classic .track-title, body.classic .control-stack label, body.classic .header h1, body.classic .control-group label { color: #333; }
+body.classic .instrument-grid, body.classic .track { background-color: #d1c7b8; }
+body.classic .master-section, body.classic .controls-container { background-color: #555; color: white; }
+body.classic .master-label h2, body.classic .knob-control label, body.classic .master-volume-container label, body.classic #swing-display { color: white; }

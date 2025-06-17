@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudio de Ritmos PRO</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="header"><h1>Estudio de Ritmos 🎛️</h1></div>
+        
+        <div class="controls-container general-controls">
+            <div class="control-group"><label>Skin:</label><select id="skin-selector"><option value="default">Futurista</option><option value="classic">Clásico 808</option></select></div>
+            <div class="control-group"><label>Tempo:</label><input type="number" id="tempo-input" value="120" min="40" max="300"></div>
+            <div class="control-group"><label>Pasos:</label><input type="number" id="steps-input" value="16" min="4" max="256"></div>
+            <div class="control-group"><label>Swing:</label><input type="range" id="swing-slider" min="0" max="0.7" step="0.01" value="0"><span id="swing-display">0%</span></div>
+            <div class="button-group">
+                <button id="clear-btn" title="Limpiar Patrón">🧹</button>
+                <button id="record-btn" title="Grabar Mezcla">🔴</button>
+                <button id="stop-btn" title="Detener">⏹️</button>
+                <button id="play-btn" title="Reproducir">▶️</button>
+            </div>
+        </div>
+        
+        <div class="controls-container master-controls">
+            <div class="master-label"><h2>MASTER</h2></div>
+            <div class="master-eq">
+                <div class="knob-control"><label>BAJOS</label><input class="knob" id="eq-low" data-min="-24" data-max="24" data-step="1" value="0"></div>
+                <div class="knob-control"><label>MEDIOS</label><input class="knob" id="eq-mid" data-min="-24" data-max="24" data-step="1" value="0"></div>
+                <div class="knob-control"><label>AGUDOS</label><input class="knob" id="eq-high" data-min="-24" data-max="24" data-step="1" value="0"></div>
+            </div>
+            <div class="master-volume-container">
+                 <label>VOL</label>
+                 <input type="range" id="master-volume" min="0" max="1.2" step="0.01" value="1">
+            </div>
+        </div>
+
+        <div id="instrument-grid" class="instrument-grid">
+            <!-- Las pistas se generarán aquí -->
+        </div>
+        <div class="add-track-container">
+            <button id="add-sampler-track-btn">+ Añadir Pista Sampler</button>
+            <button id="add-mic-track-btn">+ Añadir Pista de Voz</button>
+        </div>
+    </div>
+
+    <!-- Plantillas Ocultas -->
+    <template id="sampler-track-template">
+        <div class="track" data-type="sampler">
+            <div class="track-header">
+                <span class="track-title"></span>
+                <label class="load-button">[+]</label><input type="file" class="file-input" accept="audio/*">
+                <span class="file-name-display"></span>
+            </div>
+            <div class="track-body">
+                <div class="track-controls">
+                    <div class="control-stack"><input class="volume-slider vertical" type="range" min="0" max="1" step="0.01" value="0.8"><label>VOL</label></div>
+                    <div class="control-stack"><input class="pan-slider vertical" type="range" min="-1" max="1" step="0.01" value="0"><label>PAN</label></div>
+                    <div class="control-stack"><input class="rate-slider vertical" type="range" min="0" max="100" step="1" value="50"><label>VEL</label></div>
+                </div>
+                <div class="track-mix-controls"><button class="mute-btn">M</button><button class="solo-btn">S</button></div>
+                <div class="steps"></div>
+            </div>
+            <button class="remove-track-btn">×</button>
+        </div>
+    </template>
+    
+    <template id="mic-track-template">
+        <div class="track" data-type="mic">
+            <div class="track-header">
+                <span class="track-title">🎤 Pista de Voz</span>
+                <button class="mic-record-btn">Grabar Voz</button>
+                <span class="mic-status"></span>
+            </div>
+            <div class="track-body">
+                <div class="track-controls">
+                    <div class="control-stack"><input class="volume-slider vertical" type="range" min="0" max="1" step="0.01" value="0.8"><label>VOL</label></div>
+                    <div class="control-stack"><input class="pan-slider vertical" type="range" min="-1" max="1" step="0.01" value="0"><label>PAN</label></div>
+                    <div class="control-stack"><input class="rate-slider vertical" type="range" min="0" max="100" step="1" value="50"><label>VEL</label></div>
+                </div>
+                <div class="track-mix-controls"><button class="mute-btn">M</button><button class="solo-btn">S</button></div>
+                <div class="steps"></div>
+            </div>
+            <button class="remove-track-btn">×</button>
+        </div>
+    </template>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
